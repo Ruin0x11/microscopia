@@ -1,8 +1,11 @@
 --- @module Gui
 
 local draw = require("internal.draw")
+local Draw = require("api.Draw")
 local config = require("internal.config")
 local sound_manager = require("internal.global.sound_manager")
+local Color = require("api.Color")
+local TimedAsync = require("api.gui.menu.TimedAsync")
 
 local Gui = {}
 
@@ -57,6 +60,39 @@ end
 --- Stops the currently playing music.
 function Gui.stop_music()
    sound_manager.get():stop_music()
+end
+
+function Gui.add_effect(x, y, id, args)
+   args = args or {}
+end
+
+local function move()
+   return TimedAsync:new(0.2, function(dt, remain, entry) entry.y = entry.y - 1 end)
+     :and_then("forever", function(dt, remain, entry) entry.y = entry.y + 1 end)
+end
+
+local function shake()
+   return TimedAsync:new(2.0, function(dt, remain, entry)
+                            entry.dy = math.sin(remain * math.pi * 8) * 8 * math.max(remain - 1.1, 0)
+                              end)
+end
+
+function Gui.add_popup(x, y, text, color, shadow)
+   local field = require("internal.global.field")
+   assert(x and y and text)
+   color = color or {255, 255, 255}
+   shadow = shadow or Color.darken(color, 25)
+   local cbs = {
+      move(),
+      shake()
+   }
+   local entry = {text=Draw.make_text(text), x=x, y=y, dx=0, dy=0, color=color, shadow=shadow, dt=2, cbs=cbs}
+   table.insert(field.popups, entry)
+end
+
+function Gui.clear_popups()
+   local field = require("internal.global.field")
+   field.popups = {}
 end
 
 return Gui

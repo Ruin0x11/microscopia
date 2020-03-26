@@ -1,12 +1,12 @@
-local TestUI = require("api.gui.menu.TestUI")
-
 local logic = {}
 
 function logic.main_loop()
+   local field = require("internal.global.field")
+
    local going = true
 
    while going do
-      local _, canceled = TestUI:new():query()
+      local _, canceled = field:query()
       if canceled == "canceled" then
          going = false
       end
