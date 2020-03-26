@@ -17,7 +17,10 @@ InputHandler:delegate("mouse", {
                          "receive_mouse_movement",
                          "receive_mouse_button",
                          "run_mouse_action",
-                         "run_mouse_movement_action"
+                         "run_mouse_movement_action",
+                         "add_mouse_area",
+                         "remove_mouse_area",
+                         "update_mouse_hovers"
 })
 
 function InputHandler:init(keys)
@@ -32,6 +35,7 @@ function InputHandler:init(keys)
 end
 
 function InputHandler:focus()
+   -- BUG delegate overrides this function
    self.keys:focus()
    self.mouse:focus()
 end
