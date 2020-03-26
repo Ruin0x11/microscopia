@@ -20,7 +20,11 @@ local function setup_repl()
 end
 
 function Repl.send(code)
-   repl_layer:execute(code)
+   if repl_layer == nil then
+      setup_repl()
+   end
+
+   return repl_layer:execute(code)
 end
 
 function Repl.query()

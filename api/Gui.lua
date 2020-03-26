@@ -81,7 +81,7 @@ function Gui.add_popup(x, y, text, color, shadow)
    local field = require("internal.global.field")
    assert(x and y and text)
    color = color or {255, 255, 255}
-   shadow = shadow or Color.darken(color, 25)
+   shadow = shadow or Color.darken(color, 0.25)
    local cbs = {
       move(),
       shake()

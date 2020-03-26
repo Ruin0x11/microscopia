@@ -143,6 +143,37 @@ function Draw.line_rect(x, y, width, height, color)
    love.graphics.polygon("line", x, y, x + width, y, x + width, y + height, x, y + height)
 end
 
+--- @tparam int x
+--- @tparam int y
+--- @tparam table vertices
+--- @tparam[opt] float rotation
+--- @tparam[opt] color color
+function Draw.line_polygon(x, y, vertices, rotation, color)
+   rotation = rotation or 0.0
+   if color then
+      Draw.set_color(color[1], color[2], color[3], color[4])
+   end
+   local v = {}
+   for i=1,#vertices, 2 do
+      local dx = x * math.cos(-rotation) + y * math.sin(-rotation)
+      local dy = y * math.cos(-rotation) - x * math.sin(-rotation)
+      v[#v+1] = vertices[i] + dx
+      v[#v+1] = vertices[i+1] + dy
+   end
+   love.graphics.polygon("line", v)
+end
+
+--- @tparam int x
+--- @tparam int y
+--- @tparam float radius
+--- @tparam[opt] color color
+function Draw.line_circle(x, y, radius, color)
+   if color then
+      Draw.set_color(color[1], color[2], color[3], color[4])
+   end
+   love.graphics.circle("line", x, y, radius)
+end
+
 --- Draws a line.
 ---
 --- @tparam int x1

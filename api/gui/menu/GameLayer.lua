@@ -1,10 +1,12 @@
 local Draw = require("api.Draw")
 local DrawCallbacks = require("api.gui.menu.DrawCallbacks")
 local FieldLayer = require("api.gui.menu.FieldLayer")
-local MenuLayer = require("api.gui.menu.MenuLayer")
-local InputHandler = require("api.gui.InputHandler")
 local IInput = require("api.gui.IInput")
 local IUiLayer = require("api.gui.IUiLayer")
+local InputHandler = require("api.gui.InputHandler")
+local Log = require("api.Log")
+local MenuLayer = require("api.gui.menu.MenuLayer")
+local Node = require("api.Node")
 
 local GameLayer = class.class("GameLayer", IUiLayer)
 
@@ -23,13 +25,47 @@ function GameLayer:init()
 
    self.input = InputHandler:new()
    self.input:forward_to(self.menu)
+
+   self.node = nil
+   self.next_node = nil
+
+   self:goto_node {
+      name = "Test",
+      bg = "data/graphic/bg/business00.jpg",
+      children = {}
+   }
 end
 
 function GameLayer:make_keymap()
    return {
       shift = function() self.canceled = true end,
       escape = function() self.canceled = true end,
+      restart = function() love.event.quit("restart") end,
    }
+end
+
+function GameLayer:goto_node(node)
+   -- TODO: deinit things like physics when not in same node,
+   -- reinitialize when returning
+   if self.next_node ~= nil then
+      Log.warn("Overwriting next node.")
+   end
+   self.next_node = node
+end
+
+function GameLayer:refresh_nodes()
+   self.field:refresh_nodes(self)
+   self.menu:refresh_nodes(self)
+end
+
+function GameLayer:add_node(node)
+   self.field:add_node(node)
+   self.menu:add_node(node)
+end
+
+function GameLayer:remove_node(node)
+   self.field:remove_node(node)
+   self.menu:remove_node(node)
 end
 
 function GameLayer:init_draw_callbacks()
@@ -48,6 +84,7 @@ function GameLayer:init_draw_callbacks()
    end
    local function popups_draw()
       for _, entry in ipairs(self.popups) do
+         Draw.set_font(14)
          Draw.set_color(entry.shadow)
          Draw.text(entry.text, entry.x + entry.dx+1, entry.y + entry.dy+1)
          Draw.set_color(entry.color)
@@ -68,6 +105,16 @@ function GameLayer:relayout(x, y)
 end
 
 function GameLayer:update(dt)
+   if self.next_node then
+      if self.node then
+         Node.proc(self.node, "on_exit")
+      end
+      self.node = self.next_node
+      self.next_node = nil
+      self:refresh_nodes()
+      Node.proc(self.node, "on_enter")
+   end
+
    self.field:update(dt)
    self.menu:update(dt)
 

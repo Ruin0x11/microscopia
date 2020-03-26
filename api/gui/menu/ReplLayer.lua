@@ -421,7 +421,7 @@ function ReplLayer:print(text, color)
    color = color or {255, 255, 255}
 
    Draw.set_font(self.font_size)
-   local success, err, wrapped = xpcall(function() return Draw.wrap_text(text, self.width) end, debug.traceback)
+   local success, err, wrapped = xpcall(function() return Draw.wrap_text(text, self.width or Draw.get_width()) end, debug.traceback)
    if not success then
       self.scrollback:push({text="[REPL] error printing result: " .. string.split(err)[1], color=nil})
       Log.error("%s", err)
@@ -546,6 +546,8 @@ function ReplLayer:submit()
    self:print(result_text, color)
 
    self:save_history()
+
+   return success, result_text
 end
 
 function ReplLayer:save_history()

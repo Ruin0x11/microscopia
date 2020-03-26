@@ -1,4 +1,5 @@
 local Draw = require("api.Draw")
+local Node = require("api.Node")
 local InputHandler = require("api.gui.InputHandler")
 local IInput = require("api.gui.IInput")
 local IUiLayer = require("api.gui.IUiLayer")
@@ -7,27 +8,82 @@ local MenuLayer = class.class("MenuLayer", IUiLayer)
 
 MenuLayer:delegate("input", IInput)
 
+local function make_button(w, h, color)
+   local canvas = love.graphics.newCanvas(w, h)
+   love.graphics.setCanvas(canvas)
+   Draw.set_color(color)
+   Draw.filled_rect(1, 2, w-2, h-3)
+   Draw.set_font(14)
+   Draw.set_color(255, 255, 255)
+   Draw.line(1, 1, w-1, 1)
+   Draw.line(1, h-1, w-1, h-2)
+   Draw.line(1, 1, 0, h-2)
+   Draw.line(w, 1, w, h-2)
+   love.graphics.setCanvas()
+   return love.graphics.newImage(canvas:newImageData())
+end
+
 function MenuLayer:init()
    self.input = InputHandler:new()
    self.bg = nil
    self.buttons = {}
+   self.canvas_normal = make_button(200, 50, {0, 0, 0})
+   self.canvas_hovered = make_button(200, 50, {100, 100, 100})
+end
 
+function MenuLayer:add_button(name, cb, image)
    local w = 200
    local h = 50
-   for i = 1, 10 do
-      local node = {
-         display_name = "Test " .. i,
-         x = 20,
-         y = 20 + (i-1) * (h + 4),
-         hovered = false,
-         pressed = false,
-      }
-      node.mouse_area = self.input:add_mouse_area(node.x, node.y, w, h)
-      node.mouse_area.on_hovered = function(_, hovered) node.hovered = hovered end
-      node.mouse_area.on_pressed = function(_, pressed) node.pressed = pressed end
+   local i = #self.buttons
 
-      self.buttons[#self.buttons+1] = node
+   Draw.set_font(12)
+   local button = {
+      display_name = Draw.make_text(name),
+      text_width = Draw.text_width(name),
+      x = 20,
+      y = 20 + i * (h + 4),
+      hovered = false,
+      pressed = false,
+      image = image,
+   }
+   button.mouse_area = self.input:add_mouse_area(button.x, button.y, w, h)
+   button.mouse_area.on_hovered = function(_, hovered) button.hovered = hovered end
+   button.mouse_area.on_pressed = function(_, pressed)
+      button.pressed = pressed
+      if not pressed then
+         cb()
+      end
    end
+
+   self.buttons[#self.buttons+1] = button
+end
+
+function MenuLayer:clear_buttons()
+   for _, button in ipairs(self.buttons) do
+      self.input:remove_mouse_area(button.mouse_area)
+   end
+   self.buttons = {}
+end
+
+function MenuLayer:refresh_nodes(game)
+   self:clear_buttons()
+
+   if game.node.parent then
+      self:add_button("Go Back", function() game:goto_node(game.node.parent) end)
+   end
+   for _, child in Node.children(game.node) do
+      local image
+      if child.image then
+         image = love.graphics.newImage(child.image)
+      end
+      self:add_button(child.name, function() game:goto_node(child) end, image)
+   end
+end
+
+function MenuLayer:add_node(node)
+end
+
+function MenuLayer:remove_node(node)
 end
 
 function MenuLayer:make_keymap()
@@ -49,33 +105,35 @@ function MenuLayer:update(dt)
    end
 end
 
-local function button(x, y, w, h, text, color)
-   Draw.set_color(color)
-   Draw.filled_rect(x+1, y+1, w-1, h-1)
-   Draw.set_font(14)
-   Draw.set_color(255, 255, 255)
-   Draw.line(x, y, x+w-1, y)
-   Draw.line(x, y+h, x+w-1, y+h)
-   Draw.line(x, y, x, y+h-1)
-   Draw.line(x+w, y, x+w, y+h-1)
-   Draw.text(text, x + (w / 2) - Draw.text_width(text) / 2, y + (h / 2) - Draw.text_height() / 2)
-end
-
 function MenuLayer:draw()
    local w = 200
    local h = 50
-   for i, b in ipairs(self.buttons) do
+
+   Draw.set_color(255, 255, 255)
+   for _, b in ipairs(self.buttons) do
       local dx = 0
       local dy = 0
-      local color = {0, 0, 0}
+      local text_dx = 0
+      local canvas = self.canvas_normal
       if b.hovered then
-         color = {100, 100, 100}
+         canvas = self.canvas_hovered
       end
       if b.pressed then
          dx = 1
          dy = 1
       end
-      button(b.x + dx, b.y + dy, w, h, b.display_name, color)
+      Draw.set_font(14)
+      local line_width = b.text_width
+      if b.image then
+         line_width = line_width + b.image:getWidth()
+         text_dx = b.image:getWidth()
+      end
+
+      Draw.image(canvas, b.x + dx, b.y + dy)
+      if b.image then
+         Draw.image(b.image, b.x + dx + 16, b.y + dy + (h / 2) - b.image:getHeight() / 2)
+      end
+      Draw.text(b.display_name, b.x + dx + text_dx + (w / 2) - line_width / 2, b.y + dy + (h / 2) - Draw.text_height() / 2)
    end
 end
 

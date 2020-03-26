@@ -49,6 +49,7 @@ end
 
 function MouseHandler:remove_mouse_area(area)
    self.mouse_areas[area] = nil
+   self.bump:remove(area)
 end
 
 function MouseHandler:forward_to(handlers)

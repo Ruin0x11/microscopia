@@ -33,6 +33,7 @@ local keybinds = {
    cancel = "shift",
    escape = "escape",
    quit = "escape",
+   restart = "f9",
    north = {"up", "kp8"},
    south = {"down", "kp2"},
    west = {"left", "kp4"},
