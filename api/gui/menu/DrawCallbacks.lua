@@ -8,22 +8,26 @@ function DrawCallbacks:init()
    self.callbacks = {}
 end
 
-function DrawCallbacks:add(key, update, draw)
+function DrawCallbacks:add(key, update, draw, args)
    if key == nil then
       key = self.key
       self.key = self.key + 1
    end
 
+   local state = args or {}
+
    self.callbacks[key] = {
-      update = coroutine.create(function(dt)
+      state = state,
+      update = coroutine.create(function(dt, state)
             while true do
-               update(dt)
+               local finished = update(dt, state)
+               if finished then break end
                dt = coroutine.yield()
             end
       end),
-      draw = coroutine.create(function()
+      draw = coroutine.create(function(state)
             while true do
-               draw()
+               draw(state)
                coroutine.yield()
             end
       end)
@@ -56,7 +60,7 @@ function DrawCallbacks:draw()
 
    -- TODO: order by priority
    for key, co in pairs(self.callbacks) do
-      local going = resume_coroutine(co.draw)
+      local going = resume_coroutine(co.draw, co.state)
       if not going then
          -- Coroutine error; stop drawing now
          dead[#dead+1] = key
@@ -70,7 +74,7 @@ function DrawCallbacks:update(dt)
    local dead = {}
 
    for key, co in pairs(self.callbacks) do
-      local going = resume_coroutine(co.update, dt)
+      local going = resume_coroutine(co.update, dt, co.state)
       if not going then
          dead[#dead+1] = key
       end

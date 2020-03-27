@@ -10,7 +10,10 @@ data:add_type {
 }
 
 local music = {
-   anotherworld = "anotherworld.mid"
+   _0 = "0.mid",
+   anotherworld = "anotherworld.mid",
+   gameover = "gameover.mid",
+   whitream = "tym00.mid"
 }
 
 for k, v in pairs(music) do

@@ -36,6 +36,7 @@ function IUiLayer:query(z_order)
    end
 
    self:bind_keys(self:make_keymap())
+   self:bind_mouse(self:make_keymap())
 
    local dt = 0
    local abort = false
@@ -54,7 +55,7 @@ function IUiLayer:query(z_order)
       return
    end
 
-   local success, res, canceled
+   local success, res, canceled, err
 
    while true do
       if abort then
@@ -84,6 +85,7 @@ function IUiLayer:query(z_order)
          debug.traceback)
       if not success then
          Log.error("Error on query: %s", res)
+         err = res
          res = nil
          canceled = "error"
          break
@@ -103,7 +105,7 @@ function IUiLayer:query(z_order)
 
    draw.pop_layer()
 
-   return res, canceled
+   return res, canceled, err
 end
 
 function IUiLayer:release()

@@ -9,6 +9,7 @@ local function startup()
    rawset(_G, "pause", function(...) Repl.pause(...) end)
    rawset(_G, "data", require("internal.data"))
    rawset(_G, "config", require("internal.config"))
+   rawset(_G, "save", require("internal.global.save"))
 
    require("game.data")
 

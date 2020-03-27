@@ -34,13 +34,15 @@ end
 
 function Input.back_to_field()
    local layers = table.set {
-      "MainHud",
-      "field_layer",
-      "MainTitleMenu"
+      "GameLayer",
    }
    while not layers[draw.get_layer(0).__class.__name] do
       draw.pop_layer()
    end
+end
+
+function Input.get_mouse_pos()
+   return cpml.vec2.new(love.mouse.getPosition())
 end
 
 return Input

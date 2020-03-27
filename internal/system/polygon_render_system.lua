@@ -13,12 +13,13 @@ function polygon_render_system:process(e, dt)
       return
    end
 
-   if e.shape == "circle" then
-      Draw.set_color(e.color)
-      Draw.line_circle(e.x, e.y, e.radius)
-   elseif e.shape == "polygon" then
-      Draw.set_color(e.color)
-      Draw.line_polygon(e.x, e.y, e.polygon)
+   for _, shape in ipairs(e.shapes) do
+      Draw.set_color(shape.color or e.color or {255, 255, 255})
+      if shape.type == "circle" then
+         Draw.line_circle(e.pos.x, e.pos.y, shape.radius)
+      elseif shape.type == "polygon" then
+         Draw.line_polygon(e.pos.x, e.pos.y, shape.polygon, e.rotation)
+      end
    end
 end
 

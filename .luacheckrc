@@ -21,6 +21,7 @@ globals = {
    "class",
    "inspect",
    "fun",
+   "cpml",
    "_ppr",
    "save",
    "utf8",

@@ -155,10 +155,12 @@ function Draw.line_polygon(x, y, vertices, rotation, color)
    end
    local v = {}
    for i=1,#vertices, 2 do
-      local dx = x * math.cos(-rotation) + y * math.sin(-rotation)
-      local dy = y * math.cos(-rotation) - x * math.sin(-rotation)
-      v[#v+1] = vertices[i] + dx
-      v[#v+1] = vertices[i+1] + dy
+      local vx = vertices[i]
+      local vy = vertices[i+1]
+      local dx = vx * math.cos(-rotation) + vy * math.sin(-rotation)
+      local dy = vy * math.cos(-rotation) - vx * math.sin(-rotation)
+      v[#v+1] = dx + x
+      v[#v+1] = dy + y
    end
    love.graphics.polygon("line", v)
 end
@@ -364,6 +366,21 @@ Draw.yield = coroutine.yield
 --- @tparam[opt] color color
 --- @tparam[opt] color shadow_color
 function Draw.text_shadowed(str, x, y, color, shadow_color)
+   color = color or {255, 255, 255}
+   shadow_color = shadow_color or {0, 0, 0}
+   Draw.set_color(shadow_color[1], shadow_color[2], shadow_color[3], shadow_color[4])
+   Draw.text(str, x + 1, y + 1)
+   Draw.text(str, x, y, color)
+end
+
+--- Draws shadowed text.
+---
+--- @tparam string str
+--- @tparam int x
+--- @tparam int y
+--- @tparam[opt] color color
+--- @tparam[opt] color shadow_color
+function Draw.text_shadowed2(str, x, y, color, shadow_color)
    color = color or {255, 255, 255}
    shadow_color = shadow_color or {0, 0, 0}
    Draw.set_color(shadow_color[1], shadow_color[2], shadow_color[3], shadow_color[4])

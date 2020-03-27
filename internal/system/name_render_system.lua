@@ -16,7 +16,7 @@ function name_render_system:onAdd(e)
 end
 
 function name_render_system:process(e, dt)
-   if e.hidden then
+   if e.hidden or e.equipped or e.compo_player_control then
       return
    end
 
@@ -25,9 +25,9 @@ function name_render_system:process(e, dt)
    local h = 20
 
    Draw.set_color(0, 0, 0)
-   Draw.filled_rect(e.x - w / 2 - 2, e.y + h - 2, w + 4, Draw.text_height() + 4)
+   Draw.filled_rect(e.pos.x - w / 2 - 1, e.pos.y + h - 1, w + 2, Draw.text_height() + 2)
    Draw.set_color(255, 255, 255)
-   Draw.text(e.system.name.text, e.x - w / 2, e.y + Draw.text_height() * 1.5 + 1)
+   Draw.text(e.system.name.text, e.pos.x - w / 2, e.pos.y + Draw.text_height() * 1.5 + 1)
 end
 
 function name_render_system:onRemove(e)

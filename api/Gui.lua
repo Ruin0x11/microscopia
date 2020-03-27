@@ -64,6 +64,14 @@ end
 
 function Gui.add_effect(x, y, id, args)
    args = args or {}
+   args.x = x
+   args.y = y
+   local field = require("internal.global.field")
+   local dat = data["base.gfx"]:ensure(id)
+   if dat.create then
+      args = dat.create(args)
+   end
+   field.draw_callbacks:add("popups", dat.update, dat.draw, args)
 end
 
 local function move()

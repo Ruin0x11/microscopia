@@ -12,6 +12,7 @@ require("ext")
 
 inspect = require("thirdparty.inspect")
 fun = require("thirdparty.fun")
+cpml = require("thirdparty.cpml")
 
 if is_windows then
    -- Do not buffer stdout for Emacs compatibility.

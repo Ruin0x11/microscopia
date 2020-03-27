@@ -1,5 +1,7 @@
 local Draw = require("api.Draw")
+local Game = require("api.Game")
 local Node = require("api.Node")
+local Input = require("api.Input")
 local InputHandler = require("api.gui.InputHandler")
 local IInput = require("api.gui.IInput")
 local IUiLayer = require("api.gui.IUiLayer")
@@ -10,9 +12,47 @@ local FieldLayer = class.class("FieldLayer", IUiLayer)
 FieldLayer:delegate("input", IInput)
 
 function FieldLayer:init()
-   self.input = InputHandler:new()
+   self.active = false
    self.bg = nil
    self.ecs = ecs:new()
+   self.battle = false
+
+   self.weapons = {}
+
+   self.input = InputHandler:new()
+   local keymap = self:make_keymap()
+   self.input:bind_keys(keymap)
+   self.input:bind_mouse(keymap)
+end
+
+function FieldLayer:make_keymap()
+   return {
+      shift = function() self.canceled = true end,
+      escape = function() self.canceled = true end,
+      raw_mouse_1_pressed = function()
+         if self.weapons[1] then
+            self.weapons[1].activated = true
+         end
+      end
+   }
+end
+
+local function wall(x, y, polygon)
+   return {
+      name = "Wall",
+
+      compo_shape = true,
+      hidden = true,
+      shapes = {{
+         type = "polygon",
+         polygon = polygon,
+      }},
+
+      compo_physics = true,
+      x = x,
+      y = y,
+      body_type = "static",
+   }
 end
 
 function FieldLayer:refresh_nodes(game)
@@ -24,69 +64,10 @@ function FieldLayer:refresh_nodes(game)
 
    self.ecs:clear_entities()
 
-   self.ecs:add_entity {
-      compo_shape = true,
-      hidden = true,
-      color = {255, 0, 0},
-      shape = "polygon",
-      polygon = {0, 0,
-         50, 0,
-         50, Draw.get_height(),
-         0, Draw.get_height()},
-
-      compo_physics = true,
-      x = -50,
-      y = 0,
-      body_type = "static",
-   }
-
-   self.ecs:add_entity {
-      compo_shape = true,
-      hidden = true,
-      color = {255, 0, 0},
-      shape = "polygon",
-      polygon = {0, 0,
-         50, 0,
-         50, Draw.get_height(),
-         0, Draw.get_height()},
-
-      compo_physics = true,
-      x = Draw.get_width(),
-      y = 0,
-      body_type = "static",
-   }
-
-   self.ecs:add_entity {
-      compo_shape = true,
-      hidden = true,
-      color = {255, 0, 0},
-      shape = "polygon",
-      polygon = {0, 0,
-         0, 50,
-         Draw.get_width(), 50,
-         Draw.get_width(), 0},
-
-      compo_physics = true,
-      x = 0,
-      y = -50,
-      body_type = "static",
-   }
-
-   self.ecs:add_entity {
-      compo_shape = true,
-      hidden = true,
-      color = {255, 0, 0},
-      shape = "polygon",
-      polygon = {0, 0,
-         0, 50,
-         Draw.get_width(), 50,
-         Draw.get_width(), 0},
-
-      compo_physics = true,
-      x = 0,
-      y = Draw.get_height(),
-      body_type = "static",
-   }
+   self.ecs:add_entity(wall(-50, 0, {0, 0, 50, 0, 50, Draw.get_height(), 0, Draw.get_height()}))
+   self.ecs:add_entity(wall(Draw.get_width(), 0, {0, 0, 50, 0, 50, Draw.get_height(), 0, Draw.get_height()}))
+   self.ecs:add_entity(wall(0, -50, {0, 0, 0, 50, Draw.get_width(), 50, Draw.get_width(), 0}))
+   self.ecs:add_entity(wall(0, Draw.get_height(), {0, 0, 0, 50, Draw.get_width(), 50, Draw.get_width(), 0}))
 
    for _, child in Node.children(game.node) do
       self.ecs:add_entity(child)
@@ -95,19 +76,52 @@ function FieldLayer:refresh_nodes(game)
    self.ecs:update(0)
 end
 
+function FieldLayer:select_weapon(id)
+   local player = Node.player()
+   if player.equipment.weapon then
+      self.weapons[1] = player.equipment.weapon
+      self.ecs:add_entity(player.equipment.weapon)
+   end
+end
+
+function FieldLayer:add_player()
+   local player = Node.player()
+   player.x = Draw.get_width() / 2
+   player.y = Draw.get_height() / 2
+   self.ecs:add_entity(player)
+   self:select_weapon(1)
+end
+
+function FieldLayer:remove_player()
+   local player = Node.player()
+   self.ecs:remove_entity(player)
+   for _, weapon in pairs(self.weapons) do
+      self.ecs:remove_entity(weapon)
+   end
+end
+
+function FieldLayer:do_focus(focused)
+   if not self.active and focused then
+      self:add_player()
+   elseif self.active and not focused then
+      self:remove_player()
+   end
+
+   self.active = focused
+
+   if Game.state() == "battle" then
+      self.battle = true
+   else
+      self.battle = false
+   end
+end
+
 function FieldLayer:add_node(node)
    self.ecs:add_entity(node)
 end
 
 function FieldLayer:remove_node(node)
    self.ecs:remove_entity(node)
-end
-
-function FieldLayer:make_keymap()
-   return {
-      shift = function() self.canceled = true end,
-      escape = function() self.canceled = true end,
-   }
 end
 
 function FieldLayer:relayout(x, y)
@@ -132,6 +146,11 @@ function FieldLayer:draw()
 
    Draw.set_color(255, 255, 255)
    self.ecs:draw()
+
+   if self.battle then
+      Draw.set_color(255, 100, 100)
+      Draw.text_shadowed("Battle", 10, 10)
+   end
 end
 
 return FieldLayer

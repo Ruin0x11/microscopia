@@ -136,7 +136,7 @@ local paused = false
 --- environment. If any modifications are made to local variables,
 --- they will be reflected when execution resumes.
 function Repl.pause()
-   if Env.is_headless() or paused then
+   if paused then
       return
    end
    paused = true

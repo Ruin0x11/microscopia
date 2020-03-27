@@ -1,4 +1,5 @@
 local Draw = require("api.Draw")
+local Gui = require("api.Gui")
 local Node = require("api.Node")
 local InputHandler = require("api.gui.InputHandler")
 local IInput = require("api.gui.IInput")
@@ -24,11 +25,16 @@ local function make_button(w, h, color)
 end
 
 function MenuLayer:init()
+   self.active = false
    self.input = InputHandler:new()
    self.bg = nil
    self.buttons = {}
    self.canvas_normal = make_button(200, 50, {0, 0, 0})
    self.canvas_hovered = make_button(200, 50, {100, 100, 100})
+end
+
+function MenuLayer:do_focus(focused)
+   self.active = focused
 end
 
 function MenuLayer:add_button(name, cb, image)
@@ -47,11 +53,18 @@ function MenuLayer:add_button(name, cb, image)
       image = image,
    }
    button.mouse_area = self.input:add_mouse_area(button.x, button.y, w, h)
-   button.mouse_area.on_hovered = function(_, hovered) button.hovered = hovered end
-   button.mouse_area.on_pressed = function(_, pressed)
+   button.mouse_area.on_hovered = function(_, key, hovered)
+      button.hovered = hovered
+      if not hovered then
+         button.pressed = false
+      end
+   end
+   button.mouse_area.on_pressed = function(_, key, pressed)
       button.pressed = pressed
       if not pressed then
-         cb()
+         if key == 1 then
+            cb()
+         end
       end
    end
 
@@ -69,14 +82,20 @@ function MenuLayer:refresh_nodes(game)
    self:clear_buttons()
 
    if game.node.parent then
-      self:add_button("Go Back", function() game:goto_node(game.node.parent) end)
+      self:add_button("Go Back", function()
+                         Gui.play_sound("base.back")
+                         game:goto_node(game.node.parent)
+      end)
    end
+
    for _, child in Node.children(game.node) do
-      local image
-      if child.image then
-         image = love.graphics.newImage(child.image)
+      if child.visible_in == nil or child.visible_in == "menu" then
+         local image
+         if child.image then
+            image = love.graphics.newImage(child.image)
+         end
+         self:add_button(child.name, function() Node.activate(child) end, image)
       end
-      self:add_button(child.name, function() game:goto_node(child) end, image)
    end
 end
 
@@ -106,6 +125,10 @@ function MenuLayer:update(dt)
 end
 
 function MenuLayer:draw()
+   if not self.active then
+      return
+   end
+
    local w = 200
    local h = 50
 

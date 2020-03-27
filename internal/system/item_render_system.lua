@@ -18,13 +18,13 @@ function item_render_system:onAdd(e)
 end
 
 function item_render_system:process(e, dt)
-   if e.hidden then
+   if e.hidden or e.equipped then
       return
    end
 
    Draw.set_font(12)
-   Draw.set_color(e.color)
-   Draw.image(e.system.item.image, e.x + e.system.item.dx, e.y + e.system.item.dy)
+   Draw.set_color(e.color or {255, 255, 255})
+   Draw.image(e.system.item.image, e.pos.x + e.system.item.dx, e.pos.y + e.system.item.dy)
 end
 
 function item_render_system:onRemove(e)

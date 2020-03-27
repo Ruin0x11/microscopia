@@ -7,8 +7,8 @@ local game = require("game")
 local debug_server = require("internal.debug_server")
 local input = require("internal.input")
 local draw = require("internal.draw")
-
-local draw_stats = {}
+local draw_stats = require("internal.global.draw_stats")
+--local tick = require("thirdparty.tick")
 
 local loop_coro = nil
 local draw_coro = nil
@@ -18,6 +18,7 @@ function love.load(arg)
    love.filesystem.setIdentity(env.PROGRAM_NAME)
    draw.init()
    Draw.set_font(12)
+   --tick.framerate = 30
 
    server = debug_server:new()
    server:start()
@@ -45,6 +46,8 @@ local function start_halt()
       elseif key == "backspace" then
          pop_draw_layer = true
          stop_halt()
+      elseif key == "f9" then
+         love.event.quit(true)
       end
    end
 

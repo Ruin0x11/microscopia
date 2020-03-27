@@ -221,7 +221,7 @@ local function env_loadfile(path, mod_env)
    mod_env = mod_env or _G
    setfenv(chunk, mod_env)
 
-   local success, err = pcall(chunk)
+   local success, err = pcall(chunk, path)
    if not success then
       return nil, err
    end

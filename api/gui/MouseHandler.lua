@@ -42,7 +42,7 @@ function MouseHandler:add_mouse_area(x, y, width, height)
    area.move = function(_, _x, _y, _width, _height)
       self.bump:update(area, _x, _y, _width, _height)
    end
-   self.mouse_areas[area] = {pressed = false, hovered = false}
+   self.mouse_areas[area] = {pressed = {}, hovered = {}}
    self.bump:add(area, x, y, width, height)
    return area
 end
@@ -82,18 +82,22 @@ function MouseHandler:run_mouse_action(button, x, y, pressed)
       local area = areas[1]
       local area_data = self.mouse_areas[area]
       if area.on_pressed then
-         if pressed and not area_data.pressed then
-            area:on_pressed(true)
-            area_data.pressed = true
-         elseif not pressed and area_data.pressed then
-            area:on_pressed(false)
-            area_data.pressed = false
+         if pressed and not area_data.pressed[button] then
+            area:on_pressed(button, true)
+            area_data.pressed[button] = true
+         elseif not pressed and area_data.pressed[button] then
+            area:on_pressed(button, false)
+            area_data.pressed[button] = false
          end
       end
       return true
    end
 
-   local func = self.bindings[button]
+   local modifier = "pressed"
+   if not pressed then
+      modifier = "released"
+   end
+   local func = self.bindings["raw_mouse_" .. button .. "_" .. modifier]
    if func then
       return true, func(x, y, pressed)
    else
